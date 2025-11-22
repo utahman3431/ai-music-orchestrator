@@ -1,0 +1,56 @@
+{
+  "name": "Queue - Add Job",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "queue/add",
+        "options": {
+          "responseData": "={{$json}}"
+        }
+      },
+      "name": "Webhook - Add",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        300
+      ],
+      "webhookId": "queue-add"
+    },
+    {
+      "parameters": {
+        "code": "const fs = require('fs/promises');\nconst path = require('path');\n\nconst body = items[0].json;\nconst root = '/data/orchestration';\nconst queuePath = path.join(root, 'queue.json');\nconst statePath = path.join(root, 'state.json');\nconst jobId = body.id || `job-${Date.now()}-${Math.random().toString(16).slice(2,8)}`;\nconst jobDir = path.join(root, 'jobs', jobId);\nawait fs.mkdir(jobDir, { recursive: true });\n\nconst now = new Date().toISOString();\nconst job = {\n  id: jobId,\n  type: body.type || 'audio',\n  status: 'pending',\n  params: body.params || {},\n  artifacts: [],\n  logs: [],\n  created_at: now,\n  updated_at: now,\n};\n\nconst exists = async (p) => !!(await fs.stat(p).catch(() => null));\nif (!(await exists(queuePath))) {\n  await fs.mkdir(path.dirname(queuePath), { recursive: true });\n  await fs.writeFile(queuePath, JSON.stringify({ pending: [] }, null, 2));\n}\nif (!(await exists(statePath))) {\n  await fs.writeFile(statePath, JSON.stringify({ processing: {}, version: 1 }, null, 2));\n}\n\nawait fs.writeFile(path.join(jobDir, 'job.json'), JSON.stringify(job, null, 2));\n\nconst queue = JSON.parse(await fs.readFile(queuePath, 'utf8'));\nqueue.pending = queue.pending || [];\nqueue.pending.push({\n  id: jobId,\n  type: job.type,\n  priority: body.priority || 0,\n  submitted_at: now,\n  payload_path: path.relative(root, path.join(jobDir, 'job.json')),\n});\nawait fs.writeFile(queuePath, JSON.stringify(queue, null, 2));\n\nreturn [{ json: { status: 'enqueued', job_id: jobId, queue_size: queue.pending.length } }];"
+      },
+      "name": "Code - Enqueue",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook - Add": {
+      "main": [
+        [
+          {
+            "node": "Code - Enqueue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "ai-music"
+    }
+  ]
+}

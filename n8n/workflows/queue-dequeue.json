@@ -1,0 +1,56 @@
+{
+  "name": "Queue - Dequeue Job",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "queue/dequeue",
+        "options": {
+          "responseData": "={{$json}}"
+        }
+      },
+      "name": "Webhook - Dequeue",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        300
+      ],
+      "webhookId": "queue-dequeue"
+    },
+    {
+      "parameters": {
+        "code": "const fs = require('fs/promises');\nconst path = require('path');\n\nconst root = '/data/orchestration';\nconst queuePath = path.join(root, 'queue.json');\nconst statePath = path.join(root, 'state.json');\nconst workerId = items[0].json.worker || 'worker-1';\n\nconst queue = JSON.parse(await fs.readFile(queuePath, 'utf8'));\nqueue.pending = queue.pending || [];\n\nif (!queue.pending.length) {\n  return [{ json: { status: 'empty' } }];\n}\n\nconst jobRef = queue.pending.shift();\nawait fs.writeFile(queuePath, JSON.stringify(queue, null, 2));\n\nconst state = JSON.parse(await fs.readFile(statePath, 'utf8'));\nstate.processing = state.processing || {};\nstate.processing[jobRef.id] = {\n  worker: workerId,\n  started_at: new Date().toISOString(),\n  heartbeat_at: new Date().toISOString(),\n  retry: 0,\n};\nawait fs.writeFile(statePath, JSON.stringify(state, null, 2));\n\nconst jobPath = path.join(root, jobRef.payload_path);\nconst job = JSON.parse(await fs.readFile(jobPath, 'utf8'));\n\nreturn [{ json: { status: 'dequeued', job, job_path: jobPath, payload_path: jobRef.payload_path } }];"
+      },
+      "name": "Code - Dequeue",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook - Dequeue": {
+      "main": [
+        [
+          {
+            "node": "Code - Dequeue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "ai-music"
+    }
+  ]
+}

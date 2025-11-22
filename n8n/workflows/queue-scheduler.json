@@ -1,0 +1,59 @@
+{
+  "name": "Queue - Scheduler",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": [
+          {
+            "mode": "everyMinute"
+          }
+        ]
+      },
+      "name": "Cron - Every Minute",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://127.0.0.1:5678/webhook/worker/run",
+        "method": "POST",
+        "allowUnauthorizedCerts": true,
+        "sendBody": true,
+        "options": {}
+      },
+      "name": "HTTP - Trigger Worker",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Cron - Every Minute": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Trigger Worker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "ai-music"
+    }
+  ]
+}

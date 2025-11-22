@@ -1,0 +1,56 @@
+{
+  "name": "Health Check - Filesystem",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "health/fs",
+        "options": {
+          "responseData": "={{$json}}"
+        }
+      },
+      "name": "Webhook - Health FS",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        300
+      ],
+      "webhookId": "health-fs"
+    },
+    {
+      "parameters": {
+        "code": "const fs = require('fs/promises');\nconst path = require('path');\nconst root = '/data/orchestration';\nconst queuePath = path.join(root, 'queue.json');\nconst statePath = path.join(root, 'state.json');\n\nasync function exists(p) {\n  try { await fs.access(p); return true; } catch { return false; }\n}\n\nconst results = [];\nfor (const p of [root, queuePath, statePath]) {\n  results.push({ path: p, exists: await exists(p) });\n}\n\nlet writable = true;\ntry {\n  const testFile = path.join(root, 'tmp', `probe-${Date.now()}.txt`);\n  await fs.mkdir(path.dirname(testFile), { recursive: true });\n  await fs.writeFile(testFile, 'ok');\n  await fs.unlink(testFile);\n} catch (e) {\n  writable = false;\n  results.push({ path: root, writable: false, error: e.message });\n}\n\nreturn [{ json: { status: writable && results.every(r => r.exists || r.path === root) ? 'ok' : 'degraded', results } }];"
+      },
+      "name": "Code - Check FS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook - Health FS": {
+      "main": [
+        [
+          {
+            "node": "Code - Check FS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "ai-music"
+    }
+  ]
+}

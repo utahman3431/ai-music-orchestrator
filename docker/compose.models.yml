@@ -1,0 +1,79 @@
+version: "3.9"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ai-ollama
+    restart: unless-stopped
+    runtime: nvidia
+    environment:
+      - OLLAMA_MODELS=/data/models
+    volumes:
+      - ../orchestration:/data/orchestration
+      - ../models/ollama:/data/models
+    ports:
+      - "11434:11434"
+    command: serve
+
+  image-gen:
+    build:
+      context: ./services/image
+    container_name: ai-image
+    restart: unless-stopped
+    runtime: nvidia
+    environment:
+      - MODEL_ID=runwayml/stable-diffusion-v1-5
+      - TORCH_HOME=/data/models/torch
+    volumes:
+      - ../orchestration:/data/orchestration
+      - ../models:/data/models
+    ports:
+      - "8011:8011"
+
+  audio-gen:
+    build:
+      context: ./services/audio
+    container_name: ai-audio
+    restart: unless-stopped
+    runtime: nvidia
+    environment:
+      - MODEL_ID=facebook/musicgen-small
+      - TORCH_HOME=/data/models/torch
+      - HF_HUB_ENABLE_HF_TRANSFER=0
+      - HF_HUB_OFFLINE=0
+    volumes:
+      - ../orchestration:/data/orchestration
+      - ../models:/data/models
+    ports:
+      - "8012:8012"
+
+  video-gen:
+    build:
+      context: ./services/video
+    container_name: ai-video
+    restart: unless-stopped
+    runtime: nvidia
+    environment:
+      - MODEL_ID=stabilityai/stable-video-diffusion-img2vid
+      - TORCH_HOME=/data/models/torch
+    volumes:
+      - ../orchestration:/data/orchestration
+      - ../models:/data/models
+    ports:
+      - "8013:8013"
+
+  chroma:
+    image: ghcr.io/chroma-core/chroma:latest
+    container_name: ai-chroma
+    restart: unless-stopped
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ALLOW_RESET=TRUE
+    volumes:
+      - ../chroma:/chroma
+    ports:
+      - "8018:8000"
+
+networks:
+  default:
+    driver: bridge

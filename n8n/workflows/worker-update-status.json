@@ -1,0 +1,56 @@
+{
+  "name": "Worker - Update Job Status",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "worker/update",
+        "options": {
+          "responseData": "={{$json}}"
+        }
+      },
+      "name": "Webhook - Update Status",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        300
+      ],
+      "webhookId": "worker-update"
+    },
+    {
+      "parameters": {
+        "code": "const fs = require('fs/promises');\nconst path = require('path');\n\nconst root = '/data/orchestration';\nconst body = items[0].json;\nconst jobId = body.id;\nif (!jobId) throw new Error('id required');\nconst jobPath = path.join(root, 'jobs', jobId, 'job.json');\nconst job = JSON.parse(await fs.readFile(jobPath, 'utf8'));\n\nif (body.status) job.status = body.status;\nif (body.error) job.error = body.error;\njob.updated_at = new Date().toISOString();\nawait fs.writeFile(jobPath, JSON.stringify(job, null, 2));\n\nif (body.status === 'completed') {\n  await fs.mkdir(path.join(root, 'completed'), { recursive: true });\n  await fs.writeFile(path.join(root, 'completed', `${jobId}.json`), JSON.stringify(job, null, 2));\n}\nif (body.status === 'error') {\n  await fs.mkdir(path.join(root, 'failures'), { recursive: true });\n  await fs.writeFile(path.join(root, 'failures', `${jobId}.json`), JSON.stringify(job, null, 2));\n}\n\nreturn [{ json: { status: 'updated', job_id: jobId, job } }];"
+      },
+      "name": "Code - Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook - Update Status": {
+      "main": [
+        [
+          {
+            "node": "Code - Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "ai-music"
+    }
+  ]
+}

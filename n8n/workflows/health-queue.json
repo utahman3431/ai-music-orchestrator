@@ -1,0 +1,56 @@
+{
+  "name": "Health Check - Queue Integrity",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "health/queue",
+        "options": {
+          "responseData": "={{$json}}"
+        }
+      },
+      "name": "Webhook - Health Queue",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        300
+      ],
+      "webhookId": "health-queue"
+    },
+    {
+      "parameters": {
+        "code": "const fs = require('fs/promises');\nconst path = require('path');\nconst root = '/data/orchestration';\nconst queuePath = path.join(root, 'queue.json');\nconst statePath = path.join(root, 'state.json');\n\nconst queue = JSON.parse(await fs.readFile(queuePath, 'utf8'));\nconst state = JSON.parse(await fs.readFile(statePath, 'utf8'));\n\nconst pendingMissing = [];\nfor (const p of queue.pending || []) {\n  const jobPath = path.join(root, p.payload_path);\n  try { await fs.access(jobPath); } catch { pendingMissing.push(p.id); }\n}\n\nconst orphaned = [];\nfor (const jobId of Object.keys(state.processing || {})) {\n  const jobPath = path.join(root, 'jobs', jobId, 'job.json');\n  try { await fs.access(jobPath); } catch { orphaned.push(jobId); }\n}\n\nconst ok = !pendingMissing.length && !orphaned.length;\nreturn [{ json: { status: ok ? 'ok' : 'degraded', pending: (queue.pending || []).length, processing: Object.keys(state.processing || {}).length, pendingMissing, orphaned } }];"
+      },
+      "name": "Code - Check Queue",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook - Health Queue": {
+      "main": [
+        [
+          {
+            "node": "Code - Check Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "ai-music"
+    }
+  ]
+}
