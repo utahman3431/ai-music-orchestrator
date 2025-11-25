@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-API="${N8N_API_URL:-https://n8n.lothortech.com}"
+API="${N8N_API_URL:-http://127.0.0.1:5678}"
 TOKEN="${N8N_API_TOKEN:?set N8N_API_TOKEN}"
 
 echo "Health: generator"

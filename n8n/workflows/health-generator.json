@@ -7,7 +7,8 @@
         "path": "health/generator",
         "options": {
           "responseData": "={{$json}}"
-        }
+        },
+        "responseMode": "lastNode"
       },
       "name": "Webhook - Health Generator",
       "type": "n8n-nodes-base.webhook",
@@ -20,19 +21,45 @@
     },
     {
       "parameters": {
-        "code": "const services = {\n  ollama: process.env.LLM_URL || 'http://192.168.10.133:11434',\n  image: process.env.IMAGE_URL || 'http://192.168.10.133:8011',\n  audio: process.env.AUDIO_URL || 'http://192.168.10.133:8012',\n  video: process.env.VIDEO_URL || 'http://192.168.10.133:8013',\n  chroma: process.env.CHROMA_URL || 'http://192.168.10.133:8018',\n};\n\nasync function ping(name, url, path = '/health') {\n  const target = url.endsWith('/') ? url.slice(0, -1) : url;\n  const res = await fetch(`${target}${path}`, { method: 'GET' }).catch(err => ({ ok: false, statusText: err.message }));\n  if (!res || !res.ok) {\n    return { name, url, status: 'error', detail: res?.statusText || 'unreachable' };\n  }\n  const body = await res.text();\n  return { name, url, status: 'ok', body };\n}\n\nconst results = [];\nresults.push(await ping('ollama', services.ollama, '/api/tags'));\nresults.push(await ping('image', services.image, '/health'));\nresults.push(await ping('audio', services.audio, '/health'));\nresults.push(await ping('video', services.video, '/health'));\nresults.push(await ping('chroma', services.chroma, '/api/v2/heartbeat'));\n\nreturn [{ json: { status: results.every(r => r.status === 'ok') ? 'ok' : 'degraded', results } }];"
+        "jsCode": "const services = {\n  ollama: process.env.LLM_URL || 'http://192.168.10.133:11434',\n  image: process.env.IMAGE_URL || 'http://192.168.10.133:8011',\n  audio: process.env.AUDIO_URL || 'http://192.168.10.133:8012',\n  video: process.env.VIDEO_URL || 'http://192.168.10.133:8013',\n  chroma: process.env.CHROMA_URL || 'http://192.168.10.133:8018',\n};\n\nasync function ping(name, url, path = '/health') {\n  const target = url.endsWith('/') ? url.slice(0, -1) : url;\n  let res;\n  try {\n    res = await $httpRequest({ method: 'GET', url: `${target}${path}` });\n  } catch (err) {\n    return { name, url, status: 'error', detail: err.message || 'timeout' };\n  }\n  if (!res || (res.statusCode && res.statusCode >= 400)) {\n    return { name, url, status: 'error', detail: res?.statusText || res?.statusCode || 'unreachable' };\n  }\n  return { name, url, status: 'ok', body: res.body || res.data || res };\n}\n\nconst results = [];\nresults.push(await ping('ollama', services.ollama, '/api/tags'));\nresults.push(await ping('image', services.image, '/health'));\nresults.push(await ping('audio', services.audio, '/health'));\nresults.push(await ping('video', services.video, '/health'));\nresults.push(await ping('chroma', services.chroma, '/api/v2/heartbeat'));\n\nreturn [{ json: { status: results.every(r => r.status === 'ok') ? 'ok' : 'degraded', results } }];"
       },
       "name": "Code - Ping Services",
       "type": "n8n-nodes-base.code",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
-        200,
+        300,
         300
       ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "responseCode": 200
+      },
+      "name": "Respond - Ack",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        50,
+        300
+      ],
+      "id": "respond-health-generator"
     }
   ],
   "connections": {
     "Webhook - Health Generator": {
+      "main": [
+        [
+          {
+            "node": "Respond - Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond - Ack": {
       "main": [
         [
           {
@@ -44,13 +71,9 @@
       ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1"
   },
-  "tags": [
-    {
-      "name": "ai-music"
-    }
-  ]
+  "tags": [],
+  "versionId": null
 }
