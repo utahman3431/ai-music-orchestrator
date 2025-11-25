@@ -1,54 +1,228 @@
 {
+  "updatedAt": "2025-11-25T17:15:08.735Z",
+  "createdAt": "2025-11-25T16:52:27.078Z",
+  "id": "eMS0DidRBv5tcQN7",
   "name": "Health Check - Generator State",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
         "httpMethod": "GET",
         "path": "health/generator",
-        "options": {
-          "responseData": "={{$json}}"
-        },
-        "responseMode": "lastNode"
+        "responseMode": "responseNode",
+        "responseNode": "Respond - Ack"
       },
       "name": "Webhook - Health Generator",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        -200,
+        -600,
         300
       ],
-      "webhookId": "health-generator"
+      "webhookId": "health-generator",
+      "id": "0e27515a-f8b1-46e4-afa5-882749095c79"
     },
     {
       "parameters": {
-        "jsCode": "const services = {\n  ollama: process.env.LLM_URL || 'http://192.168.10.133:11434',\n  image: process.env.IMAGE_URL || 'http://192.168.10.133:8011',\n  audio: process.env.AUDIO_URL || 'http://192.168.10.133:8012',\n  video: process.env.VIDEO_URL || 'http://192.168.10.133:8013',\n  chroma: process.env.CHROMA_URL || 'http://192.168.10.133:8018',\n};\n\nasync function ping(name, url, path = '/health') {\n  const target = url.endsWith('/') ? url.slice(0, -1) : url;\n  let res;\n  try {\n    res = await $httpRequest({ method: 'GET', url: `${target}${path}` });\n  } catch (err) {\n    return { name, url, status: 'error', detail: err.message || 'timeout' };\n  }\n  if (!res || (res.statusCode && res.statusCode >= 400)) {\n    return { name, url, status: 'error', detail: res?.statusText || res?.statusCode || 'unreachable' };\n  }\n  return { name, url, status: 'ok', body: res.body || res.data || res };\n}\n\nconst results = [];\nresults.push(await ping('ollama', services.ollama, '/api/tags'));\nresults.push(await ping('image', services.image, '/health'));\nresults.push(await ping('audio', services.audio, '/health'));\nresults.push(await ping('video', services.video, '/health'));\nresults.push(await ping('chroma', services.chroma, '/api/v2/heartbeat'));\n\nreturn [{ json: { status: results.every(r => r.status === 'ok') ? 'ok' : 'degraded', results } }];"
+        "authentication": "none",
+        "requestMethod": "GET",
+        "url": "={{($env.LLM_URL || 'http://192.168.10.133:11434').replace(/\\/+$/, '') + '/api/tags'}}",
+        "responseFormat": "json",
+        "jsonParameters": false,
+        "options": {
+          "timeout": 5000,
+          "fullResponse": true,
+          "ignoreResponseCode": false
+        },
+        "headerParametersUi": {},
+        "queryParametersUi": {},
+        "infoMessage": ""
       },
-      "name": "Code - Ping Services",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "name": "HTTP - Ollama",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
       "position": [
-        300,
+        -200,
         300
-      ]
+      ],
+      "id": "cd228e53-064f-4304-baa3-a9f126c81112"
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "GET",
+        "url": "={{($env.IMAGE_URL || 'http://192.168.10.133:8011').replace(/\\/+$/, '') + '/health'}}",
+        "responseFormat": "json",
+        "jsonParameters": false,
+        "options": {
+          "timeout": 5000,
+          "fullResponse": true,
+          "ignoreResponseCode": false
+        },
+        "headerParametersUi": {},
+        "queryParametersUi": {},
+        "infoMessage": ""
+      },
+      "name": "HTTP - Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ],
+      "id": "8cb486bb-8e17-41d8-b0c6-b13bf5579327"
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "GET",
+        "url": "={{($env.AUDIO_URL || 'http://192.168.10.133:8012').replace(/\\/+$/, '') + '/health'}}",
+        "responseFormat": "json",
+        "jsonParameters": false,
+        "options": {
+          "timeout": 5000,
+          "fullResponse": true,
+          "ignoreResponseCode": false
+        },
+        "headerParametersUi": {},
+        "queryParametersUi": {},
+        "infoMessage": ""
+      },
+      "name": "HTTP - Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ],
+      "id": "d7ef731f-01c1-4fa5-b31a-7860a4c894c0"
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "GET",
+        "url": "={{($env.VIDEO_URL || 'http://192.168.10.133:8013').replace(/\\/+$/, '') + '/health'}}",
+        "responseFormat": "json",
+        "jsonParameters": false,
+        "options": {
+          "timeout": 5000,
+          "fullResponse": true,
+          "ignoreResponseCode": false
+        },
+        "headerParametersUi": {},
+        "queryParametersUi": {},
+        "infoMessage": ""
+      },
+      "name": "HTTP - Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        400,
+        300
+      ],
+      "id": "a3120c81-9fe6-4142-b39e-c74da70d698e"
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "GET",
+        "url": "={{($env.CHROMA_URL || 'http://192.168.10.133:8018').replace(/\\/+$/, '') + '/api/v2/heartbeat'}}",
+        "responseFormat": "json",
+        "jsonParameters": false,
+        "options": {
+          "timeout": 5000,
+          "fullResponse": true,
+          "ignoreResponseCode": false
+        },
+        "headerParametersUi": {},
+        "queryParametersUi": {},
+        "infoMessage": ""
+      },
+      "name": "HTTP - Chroma",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        600,
+        300
+      ],
+      "id": "b6c3f789-bcbe-4780-b976-c2db40d8c994"
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{$json}}",
-        "responseCode": 200
+        "responseBody": "={{ { status: ['HTTP - Ollama','HTTP - Image','HTTP - Audio','HTTP - Video','HTTP - Chroma'].every(name => { const d = $node[name].json; const ok = (d.statusCode && d.statusCode < 400) || (d.body?.status === 'ok'); return ok && !d.error; }) ? 'ok' : 'degraded', results: [ { name: 'ollama', url: ($env.LLM_URL || 'http://192.168.10.133:11434').replace(/\\/+$/, '') + '/api/tags', status: (($node[\"HTTP - Ollama\"].json.statusCode && $node[\"HTTP - Ollama\"].json.statusCode < 400 && !$node[\"HTTP - Ollama\"].json.error) || ($node[\"HTTP - Ollama\"].json.body?.status === 'ok')) ? 'ok' : 'error', statusCode: $node[\"HTTP - Ollama\"].json.statusCode, detail: $node[\"HTTP - Ollama\"].json.statusMessage || $node[\"HTTP - Ollama\"].json.error?.message, body: $node[\"HTTP - Ollama\"].json.body ?? $node[\"HTTP - Ollama\"].json }, { name: 'image', url: ($env.IMAGE_URL || 'http://192.168.10.133:8011').replace(/\\/+$/, '') + '/health', status: (($node[\"HTTP - Image\"].json.statusCode && $node[\"HTTP - Image\"].json.statusCode < 400 && !$node[\"HTTP - Image\"].json.error) || ($node[\"HTTP - Image\"].json.body?.status === 'ok')) ? 'ok' : 'error', statusCode: $node[\"HTTP - Image\"].json.statusCode, detail: $node[\"HTTP - Image\"].json.statusMessage || $node[\"HTTP - Image\"].json.error?.message, body: $node[\"HTTP - Image\"].json.body ?? $node[\"HTTP - Image\"].json }, { name: 'audio', url: ($env.AUDIO_URL || 'http://192.168.10.133:8012').replace(/\\/+$/, '') + '/health', status: (($node[\"HTTP - Audio\"].json.statusCode && $node[\"HTTP - Audio\"].json.statusCode < 400 && !$node[\"HTTP - Audio\"].json.error) || ($node[\"HTTP - Audio\"].json.body?.status === 'ok')) ? 'ok' : 'error', statusCode: $node[\"HTTP - Audio\"].json.statusCode, detail: $node[\"HTTP - Audio\"].json.statusMessage || $node[\"HTTP - Audio\"].json.error?.message, body: $node[\"HTTP - Audio\"].json.body ?? $node[\"HTTP - Audio\"].json }, { name: 'video', url: ($env.VIDEO_URL || 'http://192.168.10.133:8013').replace(/\\/+$/, '') + '/health', status: (($node[\"HTTP - Video\"].json.statusCode && $node[\"HTTP - Video\"].json.statusCode < 400 && !$node[\"HTTP - Video\"].json.error) || ($node[\"HTTP - Video\"].json.body?.status === 'ok')) ? 'ok' : 'error', statusCode: $node[\"HTTP - Video\"].json.statusCode, detail: $node[\"HTTP - Video\"].json.statusMessage || $node[\"HTTP - Video\"].json.error?.message, body: $node[\"HTTP - Video\"].json.body ?? $node[\"HTTP - Video\"].json }, { name: 'chroma', url: ($env.CHROMA_URL || 'http://192.168.10.133:8018').replace(/\\/+$/, '') + '/api/v2/heartbeat', status: (($node[\"HTTP - Chroma\"].json.statusCode && $node[\"HTTP - Chroma\"].json.statusCode < 400 && !$node[\"HTTP - Chroma\"].json.error) || ($node[\"HTTP - Chroma\"].json.body?.status === 'ok')) ? 'ok' : 'error', statusCode: $node[\"HTTP - Chroma\"].json.statusCode, detail: $node[\"HTTP - Chroma\"].json.statusMessage || $node[\"HTTP - Chroma\"].json.error?.message, body: $node[\"HTTP - Chroma\"].json.body ?? $node[\"HTTP - Chroma\"].json } ] } }}",
+        "responseCode": 200,
+        "options": {}
       },
       "name": "Respond - Ack",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        50,
+        800,
         300
       ],
-      "id": "respond-health-generator"
+      "id": "3349d45f-e340-473d-ad15-a5ee1e50068e"
     }
   ],
   "connections": {
     "Webhook - Health Generator": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Ollama",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Ollama": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Image": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Audio": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Video": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Chroma",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Chroma": {
       "main": [
         [
           {
@@ -58,22 +232,68 @@
           }
         ]
       ]
-    },
-    "Respond - Ack": {
-      "main": [
-        [
-          {
-            "node": "Code - Ping Services",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
-  "tags": [],
-  "versionId": null
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "922d1a9d-6cfe-4dc2-8968-314b137e594c",
+  "versionCounter": 11,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-11-25T16:52:27.078Z",
+      "createdAt": "2025-11-25T16:52:27.078Z",
+      "role": "workflow:owner",
+      "workflowId": "eMS0DidRBv5tcQN7",
+      "projectId": "NyTweNkKOlB5o8Od",
+      "project": {
+        "updatedAt": "2025-11-25T00:02:28.869Z",
+        "createdAt": "2025-11-24T23:59:43.727Z",
+        "id": "NyTweNkKOlB5o8Od",
+        "name": "Bob Stevens <utahman3431@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "projectRelations": [
+          {
+            "updatedAt": "2025-11-24T23:59:43.727Z",
+            "createdAt": "2025-11-24T23:59:43.727Z",
+            "userId": "217549aa-d6cc-46a0-a427-304601c31c1c",
+            "projectId": "NyTweNkKOlB5o8Od",
+            "user": {
+              "updatedAt": "2025-11-25T15:49:44.522Z",
+              "createdAt": "2025-11-24T23:59:42.510Z",
+              "id": "217549aa-d6cc-46a0-a427-304601c31c1c",
+              "email": "utahman3431@gmail.com",
+              "firstName": "Bob",
+              "lastName": "Stevens",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-11-25T00:02:35.777Z",
+                "personalization_survey_n8n_version": "1.120.4",
+                "companyType": "personal",
+                "reportedSource": "youtube"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "M5SPYKVOILDsBTDz",
+                "userActivatedAt": 1764031835817
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2025-11-25",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": []
 }
