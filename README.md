@@ -19,6 +19,12 @@ Quick start
    - `bash scripts/test_worker.sh`
 4) Manage via n8n GUI after import; artifacts live under `/opt/ai-music-orchestrator/orchestration`.
 
+Auth & tokens
+-------------
+- n8n API key lives at `/opt/codex/.env` as `n8n_api=<token>` (used for both GUI API calls and webhook bearer auth).
+- Example: `curl -H "Authorization: Bearer $n8n_api" https://n8n.lothortech.com/webhook/health/generator`.
+- Internal worker/webhook calls use `WORKER_TOKEN` (currently in `/opt/n8n/.env` and compose env); append `?token=$WORKER_TOKEN` or include in JSON body for `worker/run`.
+
 Repository layout
 -----------------
 - `docs/architecture.md` — end-to-end design, queue/state schemas, lifecycle.

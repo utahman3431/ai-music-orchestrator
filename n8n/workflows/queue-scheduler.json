@@ -19,11 +19,19 @@
     },
     {
       "parameters": {
-        "url": "http://127.0.0.1:5678/webhook/worker/run",
+        "url": "={{ ($env.N8N_WEBHOOK_BASE_URL || $env.N8N_API_URL || 'http://127.0.0.1:5678').replace(/\\/+$/, '') + '/webhook/worker/run' }}",
         "method": "POST",
         "allowUnauthorizedCerts": true,
         "sendBody": true,
-        "options": {}
+        "options": {},
+        "queryParametersUi": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "={{$env.WORKER_TOKEN || $env.N8N_WORKER_TOKEN || ''}}"
+            }
+          ]
+        }
       },
       "name": "HTTP - Trigger Worker",
       "type": "n8n-nodes-base.httpRequest",

@@ -180,6 +180,19 @@
         520
       ],
       "id": "respond-health-generator-error"
+    },
+    {
+      "parameters": {
+        "code": "const fs = require('fs/promises');\nconst path = require('path');\nconst logDir = '/data/orchestration/logs';\nconst logPath = path.join(logDir, 'health-generator.log');\n\ntry {\n  await fs.mkdir(logDir, { recursive: true });\n  const entry = {\n    ts: new Date().toISOString(),\n    node: this.getNode().name,\n    payload: items[0].json,\n  };\n  await fs.appendFile(logPath, JSON.stringify(entry) + '\\n');\n} catch (e) {\n  // ignore logging errors\n}\n\nreturn items;"
+      },
+      "name": "Code - Log Failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        600,
+        520
+      ],
+      "id": "code-log-health-generator-error"
     }
   ],
   "connections": {
@@ -203,6 +216,15 @@
             "index": 0
           }
         ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Code - Log Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "HTTP - Image": {
@@ -210,6 +232,15 @@
         [
           {
             "node": "HTTP - Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Code - Log Failure",
             "type": "main",
             "index": 0
           }
@@ -225,6 +256,15 @@
             "index": 0
           }
         ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Code - Log Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "HTTP - Video": {
@@ -232,6 +272,15 @@
         [
           {
             "node": "HTTP - Chroma",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Code - Log Failure",
             "type": "main",
             "index": 0
           }
@@ -251,48 +300,15 @@
       "error": [
         [
           {
-            "node": "Respond - Error",
+            "node": "Code - Log Failure",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "HTTP - Video": {
-      "error": [
-        [
-          {
-            "node": "Respond - Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP - Audio": {
-      "error": [
-        [
-          {
-            "node": "Respond - Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP - Image": {
-      "error": [
-        [
-          {
-            "node": "Respond - Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP - Ollama": {
-      "error": [
+    "Code - Log Failure": {
+      "main": [
         [
           {
             "node": "Respond - Error",

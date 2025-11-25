@@ -3,9 +3,10 @@ Testing & Validation
 
 Prereq env
 ----------
-- `N8N_API_TOKEN` set locally.
+- `N8N_API_TOKEN` set locally (from `/opt/codex/.env` key `n8n_api`).
 - n8n accessible at `https://n8n.lothortech.com`.
 - Services running on `192.168.10.133` with open ports 11434, 8011, 8012, 8013, 8018.
+- Worker/webhook auth: `WORKER_TOKEN` from `/opt/n8n/.env` (or `docker-compose.yml` env) passed as `?token=...` for `worker/run`/scheduler triggers.
 
 Happy-path
 ----------
