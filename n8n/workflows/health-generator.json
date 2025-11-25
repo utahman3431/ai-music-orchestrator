@@ -160,10 +160,26 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        800,
+        1000,
         300
       ],
       "id": "3349d45f-e340-473d-ad15-a5ee1e50068e"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'error', message: $json?.message || 'Service check failed', node: $workflow.error?.node?.name || $node[\"Webhook - Health Generator\"].name } }}",
+        "responseCode": 500,
+        "options": {}
+      },
+      "name": "Respond - Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        800,
+        520
+      ],
+      "id": "respond-health-generator-error"
     }
   ],
   "connections": {
@@ -227,6 +243,59 @@
         [
           {
             "node": "Respond - Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Respond - Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Video": {
+      "error": [
+        [
+          {
+            "node": "Respond - Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Audio": {
+      "error": [
+        [
+          {
+            "node": "Respond - Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Image": {
+      "error": [
+        [
+          {
+            "node": "Respond - Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Ollama": {
+      "error": [
+        [
+          {
+            "node": "Respond - Error",
             "type": "main",
             "index": 0
           }
